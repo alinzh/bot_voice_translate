@@ -1,7 +1,9 @@
 *.wav
+*.oga
 *.ogg
 /.idea
 /.vscode
 /.ipynb_checkpoints
 *.db
 *.whl
+/__pycache__
