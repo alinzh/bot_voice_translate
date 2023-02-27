@@ -1,0 +1,7 @@
+*.wav
+*.ogg
+/.idea
+/.vscode
+/.ipynb_checkpoints
+*.db
+*.whl
