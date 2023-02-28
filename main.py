@@ -177,13 +177,13 @@ def audio_to_text(dest_name: str):
     return result
 
 def punctuation(input_text):
-    model, example_texts, languages, punct, apply_te = torch.hub.load(repo_or_dir=r"\snakers4_silero-models_master", source="local", model='silero_te')
+    model, example_texts, languages, punct, apply_te = torch.hub.load(repo_or_dir=r"snakers4_silero-models_master", source="local", model='silero_te')
     return apply_te(input_text, lan='ru')
 
 @bot.message_handler(content_types = ['text'])
 def translate_message(message):
     translator = Translator()
-    result = translator.translate(text = message.text)
+    result = translator.translate(text=message.text)
     if result.src == 'en':
         markup = types.InlineKeyboardMarkup()  # создали  кнопку
         markup.add(types.InlineKeyboardButton('Оценить бота', callback_data='asdf'))
