@@ -287,16 +287,15 @@ def get_voice_message(message):
             word2count.values())  # насколько частовстречается данное слово, относительно САМОГ7О частовстречаемого
 
     sent2score = {}
-    c = 0  # хранит кол-во индексов, прошедших по длинне предложений
     for i, sentence in enumerate(sentences):
-        if len(sentence.split(' ')) < 28 and len(sentence.split(' ')) > 9:
+        if len(sentence.split(' ')) < 28 and len(sentence.split(' ')) > 6:
             if sentence not in sent2score.keys():
                 sent2score[sentence] = 0
             for word in sentence.split():
                 if word in word2count.keys():
                     sent2score[sentence] += word2count[
                         word]  # сумма рейтингов слов в конкретном предложении, получили рейтинг предложения
-    if c < 3:
+    if len(sent2score) < 4:
         markup = types.InlineKeyboardMarkup()  # создали  кнопку
         markup.add(types.InlineKeyboardButton('Оценить бота', callback_data='asdf'))
         bot.send_message(message.from_user.id, 'Нажми на кнопку, чтобы оценить мои способности🙏🏻\n*Это анонимно!*', reply_markup=markup, parse_mode="Markdown")
