@@ -1,25 +1,39 @@
-import telebot
-import requests
+# 1) Поправить импорты ctrl+o
+# 2) Убрать хардкоды путей до файлов
+# 3) Поправит БД. Посомтри CREATE OR IGNORE или типа того. Вообще вынести фнукцию из функции. Создавать бд в начале скрипта, а не при каждом вызове.
+# 4) Разобраться, почему переводчик кидает ошибку на сервер
+# 5) Как закончишь - спросить Костю про tmux
+# 6) Поцелдовать Костю. Минет обязательно.
+
 import os
-import sqlite3
-import pandas as pd
-import torch
-import torchaudio as ta
-from tqdm import tqdm
-from transformers import AutoModel, AutoProcessor, AutoModelForSpeechSeq2Seq
-import subprocess
-import speech_recognition as sr
-import ffmpeg
 import re
-import heapq
-import yaml
+import sqlite3
+import ffmpeg
 import numpy as np
-from googletrans import Translator
 import pymorphy3
+import requests
+import speech_recognition as sr
+import telebot
+import torch
+import yaml
+from googletrans import Translator
 from telebot import types
+
+import httplib2
+import googleapiclient.discovery
+from oauth2client.service_account import ServiceAccountCredentials
+
 morph = pymorphy3.MorphAnalyzer()
-import soundfile as sf
-from langdetect import detect
+
+CREDENRIALS_FILE = 'gs_credentials.json'
+spreadsheet_id = '10K4UCiuZgLzt-Pwvpgaeq4CriKWoI0Aelqg4p0diaj4'
+spreadsheet_id1 = '1Kvckd52v-BOSfhrRKArnE6lZCfZshZoqufwFfDVOEhg'
+credentials = ServiceAccountCredentials.from_json_keyfile_name(
+    CREDENRIALS_FILE,
+        ['https://www.googleapis.com/auth/spreadsheets',
+         'https://www.googleapis.com/auth/drive'])
+httpAuth = credentials.authorize(httplib2.Http())
+service = googleapiclient.discovery.build('sheets', 'v4', http = httpAuth)
 
 with open('latest_silero_models.yml', 'r', encoding="utf8") as yaml_file:
     models = yaml.load(yaml_file, Loader=yaml.SafeLoader)
@@ -36,59 +50,121 @@ print(f'Available punctuation marks {available_punct}')
 bot_token = '6040925657:AAErLyj7OVgOlqgmxF8npbt5-1aHP9zj6gc'
 bot = telebot.TeleBot(bot_token)
 
+def add_to_google_s(id, name, user_name, grade='-'):
+    values = service.spreadsheets().values().append(
+        spreadsheetId=spreadsheet_id,
+        range="A1:D200",
+        valueInputOption="RAW",
+        body={
+            'values': [
+                [id, name, user_name, grade]]
+        }).execute()
+def google_5(grade='5'):
+    values = service.spreadsheets().values().append(
+        spreadsheetId=spreadsheet_id1,
+        range="A1:A100",
+        valueInputOption="RAW",
+        body={
+            'values': [
+                [grade]]
+        }).execute()
+def google_4(grade='4'):
+    values = service.spreadsheets().values().append(
+        spreadsheetId=spreadsheet_id1,
+        range="A1:A100",
+        valueInputOption="RAW",
+        body={
+            'values': [
+                [grade]]
+        }).execute()
+def google_3(grade='3'):
+    values = service.spreadsheets().values().append(
+        spreadsheetId=spreadsheet_id1,
+        range="A1:A100",
+        valueInputOption="RAW",
+        body={
+            'values': [
+                [grade]]
+        }).execute()
+def google_2(grade='2'):
+    values = service.spreadsheets().values().append(
+        spreadsheetId=spreadsheet_id1,
+        range="A1:A100",
+        valueInputOption="RAW",
+        body={
+            'values': [
+                [grade]]
+        }).execute()
+# def create_table(): #создаю таблицу, если такой не существует
+#     connection = sqlite3.connect('bot_data.db')
+#     sqlite_create_table_query = ''' CREATE TABLE IF NOT EXISTS user (
+#                                     id INTEGER PRIMARY KEY,
+#                                     name TEXT NOT NULL,
+#                                     user_name text NOT NULL UNIQUE);'''
+#     cursor = connection.cursor()
+#     print("База данных подключена к SQLite")
+#     cursor.execute(sqlite_create_table_query)
+#     connection.close()
+# create_table()
+# def insert_varible_into_table(id, name, user_name):
+#     connection = sqlite3.connect('bot_data.db')
+#     cursor = connection.cursor()
+#     sqlite_insert_with_param = """INSERT INTO user
+#                                   (id, name, user_name)
+#                                   VALUES (?, ?, ?);"""
+#
+#     data_tuple = (id, name, user_name)
+#     cursor.execute(sqlite_insert_with_param, data_tuple)
+#     connection.commit()
+#     print("Переменные Python успешно вставлены в таблицу user")
+#     connection.close()
 @bot.callback_query_handler(lambda callback_query: callback_query.data == "asd")
 def voice2text(callback_query):
     chat_id = callback_query.message.chat.id
     bot.send_message(chat_id, "Чтобы я перевел ГС в текстовое сообщение, ты можешь👇 \n\nа) *Записать мне ГС сам*. \nб) *Переслать чье-то ГС мне* -- только не пиши к нему текст, иначе я не сработаю. \n\nЯ отправлю тебе результат спустся 5-15 секунд, зависит от объема. Если ГС будет очень большое - я вышлю тебе *краткое содержание* после транскрибирования в текст🥰", parse_mode="Markdown")
+@bot.callback_query_handler(lambda callback_query: callback_query.data == "asdf")
+def survey(callback_query):
+    chat_id = callback_query.message.chat.id
+    markup = types.InlineKeyboardMarkup()  # создали  кнопку
+    markup.add(types.InlineKeyboardButton('Супер!', callback_data='super'))
+    markup.add(types.InlineKeyboardButton('Хорошо!', callback_data='good'))
+    markup.add(types.InlineKeyboardButton('Нормально!', callback_data='normal'))
+    markup.add(types.InlineKeyboardButton('Бывало и лучше!', callback_data='nu_takoe'))
+
+    bot.send_message(chat_id, "Оцени, нсколько я тебя был полезен, пожалуйста:", reply_markup=markup, parse_mode="Markdown")
+@bot.callback_query_handler(lambda callback_query: callback_query.data == "super")
+def grade_1(callback_query):
+    chat_id = callback_query.message.chat.id
+    bot.send_message(chat_id,'Спасибо за оценку! Уверен, ты поможешь мне стать лучше)')
+    google_5()
+@bot.callback_query_handler(lambda callback_query: callback_query.data == "good")
+def grade_2(callback_query):
+    chat_id = callback_query.message.chat.id
+    bot.send_message(chat_id,'Спасибо за оценку! Уверен, ты поможешь мне стать лучше)')
+    google_4()
+@bot.callback_query_handler(lambda callback_query: callback_query.data == "normal")
+def grade_3(callback_query):
+    chat_id = callback_query.message.chat.id
+    bot.send_message(chat_id,'Спасибо за оценку! Уверен, ты поможешь мне стать лучше)')
+    google_3()
+@bot.callback_query_handler(lambda callback_query: callback_query.data == "nu_takoe")
+def grade_4(callback_query):
+    chat_id = callback_query.message.chat.id
+    bot.send_message(chat_id,'Спасибо за оценку! Уверен, ты поможешь мне стать лучше)')
+    google_2()
 
 @bot.callback_query_handler(lambda callback_query: callback_query.data == "as")
 def text_translator(callback_query):
     chat_id = callback_query.message.chat.id
     bot.send_message(chat_id, "Я умею переводить текст *с любого языка на Русский* и *с Английского на Русский*. \n\nОтправь мне *текстовое* сообщение, которое необходимо перевести, я сам определю язык🥰", parse_mode="Markdown")
-
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     markup = types.InlineKeyboardMarkup() #создали  кнопку
     markup.add(types.InlineKeyboardButton('Перевод ГС в текст', callback_data='asd'))
     markup.add(types.InlineKeyboardButton('Переводчик', callback_data='as'))
     bot.reply_to(message, f"Привет, {message.from_user.first_name}!👋 \nМеня зовут Galina-bot, я могу тебе помочь с: \n\n1️⃣ *Переводом* \nУмею переводить с любого языка на Русский или с Русского на Английский.\n\n2️⃣ *Переводом речи в текст*\nАля бесплатный 🔥Telegram Premium🔥\n\n3️⃣ *Кратким пересказом ГС*\nДелаю автоматически, если твоё ГС более 3 предложений.\n\nЧтобы начать мной пользоваться выбери, что тебе нужно👇", reply_markup=markup, parse_mode="Markdown",)
-    message
-    def insert_varible_into_table(id = message.from_user.id, name = message.from_user.first_name, user_name = message.from_user.username):
-        connection = sqlite3.connect('bot_data.db')
-        sqlite_create_table_query = '''CREATE TABLE user (
-                                        id INTEGER PRIMARY KEY,
-                                        name TEXT NOT NULL,
-                                        user_name text NOT NULL UNIQUE);'''
-        cursor = connection.cursor()
-        print("База данных подключена к SQLite")
-        cursor.execute(sqlite_create_table_query)
-        connection.commit()
-
-        sqlite_insert_with_param = """INSERT INTO user
-                                      (id, name, user_name)
-                                      VALUES (?, ?, ?);"""
-
-        data_tuple = (id, name, user_name)
-        cursor.execute(sqlite_insert_with_param, data_tuple)
-        connection.commit()
-        print("Переменные Python успешно вставлены в таблицу user")
-        connection.close()
-    insert_varible_into_table(id = message.from_user.id, name = message.from_user.first_name, user_name = message.from_user.username)
-
-    # def execute_read_query(sqlite_connection = sqlite3.connect('sqlite_python.db')):
-    #     cursor = sqlite_connection.cursor()
-    #     result = None
-    #     try:
-    #         cursor.execute()
-    #         result = cursor.fetchall()
-    #         return result
-    #     except Error as e:
-    #         print(f"The error '{e}' occurred")
-    #
-    # select_users = "SELECT * from sqlitedb_bot_galina"
-    # users = execute_read_query(select_users, sqlite_connection = sqlite3.connect('sqlite_python.db'))
-    # for user in users:
-    #     print(user)
+    add_to_google_s(message.from_user.id, message.from_user.first_name, message.from_user.username)
+    # insert_varible_into_table(message.from_user.id, message.from_user.first_name, message.from_user.username)
 
 def audio_to_text(dest_name: str):
 # Функция для перевода аудио, в формате ".vaw" в текст
@@ -101,7 +177,7 @@ def audio_to_text(dest_name: str):
     return result
 
 def punctuation(input_text):
-    model, example_texts, languages, punct, apply_te = torch.hub.load(repo_or_dir=r"C:\snakers4_silero-models_master", source="local", model='silero_te')
+    model, example_texts, languages, punct, apply_te = torch.hub.load(repo_or_dir=r"\snakers4_silero-models_master", source="local", model='silero_te')
     return apply_te(input_text, lan='ru')
 
 @bot.message_handler(content_types = ['text'])
@@ -109,11 +185,17 @@ def translate_message(message):
     translator = Translator()
     result = translator.translate(text = message.text)
     if result.src == 'en':
+        markup = types.InlineKeyboardMarkup()  # создали  кнопку
+        markup.add(types.InlineKeyboardButton('Оценить бота', callback_data='asdf'))
         trans = translator.translate(message.text, dest='ru')
-        bot.send_message(message.from_user.id, f'Перевод сообщения с {trans.src} на {trans.dest}: \n*{trans.text}*', parse_mode= "Markdown")
+        bot.send_message(message.from_user.id, f'Перевод сообщения с {trans.src} на {trans.dest}: \n*{trans.text}* \n\nНажми на кнопку, чтобы оценить мои способности🙏🏻\n*Это анонимно!*',
+                         reply_markup=markup, parse_mode="Markdown")
     else:
+        markup = types.InlineKeyboardMarkup()  # создали  кнопку
+        markup.add(types.InlineKeyboardButton('Оценить бота', callback_data='asdf'))
         trans = translator.translate(message.text, dest='en')
-        bot.send_message(message.from_user.id, f'Перевод сообщения с {trans.src} на {trans.dest}: \n*{trans.text}*', parse_mode= "Markdown")
+        bot.send_message(message.from_user.id, f'Перевод сообщения с {trans.src} на {trans.dest}: \n*{trans.text}* \n\nНажми на кнопку, чтобы оценить мои способности🙏🏻\n*Это анонимно!*', reply_markup=markup, parse_mode="Markdown")
+
 
 @bot.message_handler(content_types = ['voice'])
 def get_voice_message(message):
@@ -136,9 +218,9 @@ def get_voice_message(message):
     ffmpeg.input(fname + '.oga').output(fname + '.wav').run()
     result = audio_to_text(fname + '.wav')  # Вызов функции для перевода аудио в текст
     result = result.lower()
-    # bot.send_message(message.from_user.id, format(result))
     answer = punctuation(result)
     bot.send_message(message.from_user.id, format(answer))
+    os.remove(fname + '.wav') #удаляем аудиофайл, чтобы не хранить в папке
 
     text = answer
 
@@ -214,12 +296,18 @@ def get_voice_message(message):
                 if word in word2count.keys():
                     sent2score[sentence] += word2count[
                         word]  # сумма рейтингов слов в конкретном предложении, получили рейтинг предложения
-
+    if c < 3:
+        markup = types.InlineKeyboardMarkup()  # создали  кнопку
+        markup.add(types.InlineKeyboardButton('Оценить бота', callback_data='asdf'))
+        bot.send_message(message.from_user.id, 'Нажми на кнопку, чтобы оценить мои способности🙏🏻\n*Это анонимно!*', reply_markup=markup, parse_mode="Markdown")
+        return
     idx = np.flip(
         np.argsort(list(sent2score.values())))  # индексы "рейтингов" предложений по убыванию рейтингов (не индексов!!!)
     best_three_sentences = np.array(list(sent2score.keys()))[idx][:3]
     summary_mes = ''.join(best_three_sentences)
-    bot.send_message(message.from_user.id, f'*Краткий пересказ голосового сообщения:*\n{summary_mes}', parse_mode="Markdown")
+    markup = types.InlineKeyboardMarkup()  # создали  кнопку
+    markup.add(types.InlineKeyboardButton('Оценить бота', callback_data='asdf'))
+    bot.send_message(message.from_user.id, f'*Краткий пересказ голосового сообщения:*\n{summary_mes}\n\nНажми на кнопку, чтобы оценить мои способности🙏🏻\n*Это анонимно!*', reply_markup=markup, parse_mode="Markdown")
 
 
 bot.polling(none_stop=True, interval=0)
